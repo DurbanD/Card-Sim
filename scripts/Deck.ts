@@ -3,18 +3,16 @@ import {Card} from './Card';
 
 export interface Deck {
     cards : Array<Card>;
-    discards : Array<object>
 }
 
 export class Deck {
     constuctor() {
         this.cards = [];
-        this.discards = new Array();
     }
 
     buildStandardDeck() {
         let suites = ['spades','clubs','hearts','diamonds'],
-            deck = [];
+            deck : Card[] = [];
         for (let suite of suites) {
             for (let i = 1; i <= 13; i++ ) {
                 let card = new Card(i,suite);
@@ -30,6 +28,23 @@ export class Deck {
 
     addCard(val : number, suite : string) {
         this.cards.push(new Card(val,suite));
+        return true;
+    }
+
+    removeCard(val:number, suite:string) {
+        let found = -1;
+        for (let i = 0; i < this.cards.length; i++) {
+            let cur = this.cards[i];
+            if (cur.suite === suite && cur.val === val) {
+                found = i;
+                break;
+            }
+        }
+        if (found > -1) {
+            this.cards.splice(found,1);
+            return true;
+        }
+        return false;
     }
 
     isCard(val : number, suite : string) {
@@ -52,31 +67,36 @@ export class Deck {
         this.cards = res;
     }
 
-    shuffleIn(cards:Card[]) {
-        let newCards = this.cards;
-        while(cards.length > 0) {
-            let card = cards.pop();
-            if (card !== undefined) newCards.push(card);
+    shuffleIn(cards:Card[] = []) {
+        while (cards.length > 0) {
+            let cur = cards.pop();
+            if (cur) this.addCard(cur.val, cur.suite);
         }
-        this.cards = newCards;
         this.shuffle();
+        // let newCards = this.cards;
+        // while(cards.length > 0) {
+        //     let card = cards.pop();
+        //     if (card !== undefined) newCards.push(card);
+        // }
+        // this.cards = newCards;
+        // this.shuffle();
     }
 
     dealTop(target:Card[], deck : Card[] = this.cards) {
-        if (deck.length < 1) return Error('Deck is Empty');
+        if (!deck || deck.length < 1) return Error('Deck is Empty');
         let card = deck.pop();
         if (card !== undefined) target.push(card);
     }
 
     dealBottom(target:Card[], deck : Card[] = this.cards) {
-        if (deck.length < 1) return Error('Not Enough Cards');
+        if (!deck || deck.length < 1) return Error('Not Enough Cards');
         let card  = deck.shift();
         if (card !== undefined) target.push(card);
     }
 
     dealRound(targets:Card[][], number: number) {
         for (let i = 0; i < number; i++) {
-            for (let hand of targets) this.dealTop(hand);
+            for (let hand of targets) this.dealTop(hand, this.cards);
         }
     }
 

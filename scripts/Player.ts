@@ -1,11 +1,13 @@
 import {Card} from './Card';
 
 export interface Player {
+    name: string,
     hand : Card[];
 }
 
 export class Player {
-    constructor() {
-        this.hand = new Array();
+    constructor(name:string) {
+        this.name = name;
+        this.hand = [];
     }
 }

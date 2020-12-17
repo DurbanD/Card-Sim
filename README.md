@@ -13,4 +13,4 @@ _Ruleset_ - Contains the checks for various hands as well as their priority
 
 _Game_ - Takes a _Deck_ and _Rulset_ to generate games for _Players_
 
-_Player_ - Will have a hand containing _Cards_ and participate in _Games_;
+_Player_ - Will have a name, a hand containing _Cards_ and can participate in _Games_;
