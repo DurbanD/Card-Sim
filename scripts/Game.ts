@@ -1,17 +1,16 @@
 import { Deck } from './Deck';
-import {Ruleset} from './Ruleset';
-import {PokerRuleset} from './Poker';
-// import {Deck} from './Deck';
+import { Ruleset, testResult } from './Ruleset';
 import {Card} from './Card';
 import {Player} from './Player';
+import { PokerRuleset } from './Poker';
 
-interface Game {
+export interface Game {
     ruleset: Ruleset
     deck: Deck;
     players: Player[];
 }
 
-class Game {
+export class Game {
     constructor(deck:Deck, ruleset:Ruleset, players:Player[]) {
         this.deck = deck;
         this.deck.setStandardDeck();
@@ -19,15 +18,83 @@ class Game {
         this.players = players;
     }
 
-    play() : {players:Player[], hands: Card[][], river: Card[]} {
-        this.players.forEach(p=>this.deck.shuffleIn(p.hand)); 
-        if (this.deck.cards.length === 0) this.deck.setStandardDeck();
-        const deal : {players:Player[], hands:Card[][], river:Card[]}= this.ruleset.deal(this.players,this.deck);
-        let res = {
+    play() : {players:Player[], hands: {name:string,hand:Card[], matchTest:testResult|null}[], river: Card[], win:{player:Player|null, hand:Card[]|null, test:testResult|null}} {
+        this.players.forEach(p=>this.deck.shuffleIn(p.hand.cards)); 
+        if (this.deck.cards.length !== 52) this.deck.setStandardDeck();
+
+        const deal : { players:Player[], hands:Card[][], river:Card[] } = this.ruleset.deal(this.players,this.deck),
+            winner = this.ruleset.findWinningPlayer(deal.players,deal.river);
+
+        let res : {players:Player[], hands:{name:string, hand:Card[], matchTest:testResult|null}[] ,river:Card[], win: {player:Player|null, hand:Card[]|null, test:testResult|null} } = {
             players : Array.from(deal.players),
-            hands : Array.from(deal.hands),
-            river : Array.from(deal.river)
+            hands : [],
+            river : Array.from(deal.river),
+            win: {player:winner, hand:winner.hand.cards, test:winner.hand.bestMatch}
         }
+
+        for (let player of deal.players) {
+            let hand = Array.from(player.hand.cards);
+            res.river.forEach(c=>hand.push(c));
+            res.hands.push({name:player.name, hand:player.hand.cards, matchTest: player.hand.bestMatch});
+        }
+
+        return res;
+
+        // let bestTests = [];
+        for (let i = 0; i < res.players.length; i++) {
+            let P = res.players[i],
+                hand = Array.from(P.hand.cards);
+            res.river.forEach(c=>hand.push(c));
+            P.hand.bestMatch = this.ruleset.testAll(hand);
+
+            // bestTests.push(P.hand.bestMatch);
+            // P.hand.bestMatch = test;
+
+            res.hands.push({name : P.name, hand : hand, matchTest: P.hand.bestMatch});
+        }
+        // res.win.test = this.ruleset.bestTest(bestTests);
+        // if (res && !res.win.test || !res.win.test.index) return res;
+        // if (res.win?.test.index?.length === 1) {
+        //     res.win.player = res.players[res.win?.test.index[0]];
+        //     res.win.hand = res.hands[res.win?.test.index[0]].hand;
+        // }
+        // else if (res.win.test && res.win.test.index && res.win.test.index.length > 1) {
+        //     let tiedPlayers : Player[] = [],
+        //         tiedHands : Card[][] = [];
+        //     res.win?.test.index.forEach(i=>{
+        //         let playerHand = Array.from(res.hands[i].hand);
+        //         tiedPlayers.push(res.players[i]);
+
+        //         playerHand.forEach(c=> c.val === 1 ? c.val = 14 : c.val = c.val);
+        //         tiedHands.push(playerHand.sort((a,b)=>b.val-a.val));
+
+        //     });
+
+        //     let maxPlayer = null,
+        //         maxCard = null,
+        //         maxHand = null;
+        //     for (let i = 1; i < tiedHands.length; i++) {
+        //         let last = tiedHands[i-1],
+        //             cur = tiedHands[i];
+        //         for (let j = 0; j < Math.min(last.length,cur.length); j++) {
+        //             if (last[j].val > cur[j].val || (maxCard && last[j].val > maxCard.val)) {
+        //                 maxCard = last[j];
+        //                 maxPlayer = tiedPlayers[i-1];
+        //                 maxHand = last;
+        //             }
+        //             if (cur[j].val > last[j].val || (maxCard && cur[j].val > maxCard.val)) {
+        //                 maxCard = cur[j];
+        //                 maxPlayer = tiedPlayers[i];
+        //                 maxHand = cur;
+        //             }
+        //         }
+        //     }
+
+        //     if (maxPlayer) {
+        //         res.win.player = maxPlayer;
+        //         res.win.hand = maxHand;
+        //     }
+        // }
 
         return res;
     }
@@ -47,14 +114,3 @@ class Game {
         return true;
     }
 }
-const stDeck = new Deck(),
-    P1 = new Player('1'),
-    P2 = new Player('2'),
-    P3 = new Player('3');
-stDeck.buildStandardDeck();
-
-const newGame = new Game(new Deck(), PokerRuleset, [P1,P2,P3]);
-let holdem3 = newGame.play();
-for (let P of holdem3.players) console.log('Player '+ P.name, P.hand);
-console.log(holdem3.river);
-// console.log(holdem3.players, '\n', holdem3.hands, '\n', holdem3.river);

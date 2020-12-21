@@ -1,5 +1,4 @@
 import {Card} from './Card';
-// import {PokerRules} from './PokerRules';
 
 export interface Deck {
     cards : Array<Card>;
@@ -73,13 +72,6 @@ export class Deck {
             if (cur) this.addCard(cur.val, cur.suite);
         }
         this.shuffle();
-        // let newCards = this.cards;
-        // while(cards.length > 0) {
-        //     let card = cards.pop();
-        //     if (card !== undefined) newCards.push(card);
-        // }
-        // this.cards = newCards;
-        // this.shuffle();
     }
 
     dealTop(target:Card[], deck : Card[] = this.cards) {
